@@ -1,0 +1,13 @@
+/**
+ * Button.module.css
+ *
+ * @format
+ */
+
+.button {
+  transition: transform 0.3s ease-in-out;
+}
+
+.button:active {
+  transform: scale(0.95);
+}

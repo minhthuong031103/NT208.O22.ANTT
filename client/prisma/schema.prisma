@@ -1,0 +1,233 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider     = "mysql"
+  url          = env("DATABASE_URL")
+  relationMode = "prisma"
+}
+
+model User {
+  id                     Int             @id @default(autoincrement())
+  name                   String
+  email                  String          @unique
+  phoneNumber            String?
+  password               String
+  diaChi                 String?
+  role                   String?         @default("khach_hang")
+  avatar                 String?         @default("https://i0.wp.com/www.repol.copl.ulaval.ca/wp-content/uploads/2019/01/default-user-icon.jpg?ssl=1")
+  isEmailVerified        Boolean         @default(false)
+  otp                    String?
+  anhCCCDTruoc           String?
+  anhCCCDSau             String?
+  anhGiayPhepKinhDoanh   String?
+  anhChanDung            String?
+  luot                   Int?            @default(0)
+  luotChuyenNghiep       Int?            @default(0)
+  luotVip                Int?            @default(0)
+  duyetDoiTac            String?
+  stripeCurrentPeriodEnd DateTime?       @map("stripe_current_period_end")
+  stripeCustomerId       String?         @unique @map("stripe_customer_id")
+  stripePriceId          String?         @map("stripe_price_id")
+  stripeSubscriptionId   String?         @unique @map("stripe_subscription_id")
+  createdAt              DateTime        @default(now())
+  giamGia                Int?            @default(0)
+  duyetKhachHang         String?
+  isOnline               Boolean         @default(false)
+  lastSeen               DateTime?
+  maSoCmnd               String?
+  directMessages         DirectMessage[]
+  seenMessages           SeenMessage[]
+  BaiViets               BaiViet[]
+  Revenues               Revenue[]
+  Favourite              Favourite?
+  conversationsInitiated Conversation[]  @relation("userOne")
+  conversationsReceived  Conversation[]  @relation("userTwo")
+}
+
+model LoaiBDS {
+  id        Int        @id @default(autoincrement())
+  name      String     @unique
+  createdAt DateTime   @default(now())
+  loaiHinhs LoaiHinh[]
+}
+
+model BaiViet {
+  id                  Int         @id @default(autoincrement())
+  tieuDe              String
+  moTa                String
+  nhan                String
+  trangThai           String      @default("cho_duyet")
+  ngayDang            DateTime    @default(now())
+  userId              Int
+  gia                 Float
+  isChothue           Boolean     @default(false)
+  diaChi              String
+  dienTich            Float
+  chieuDai            Float
+  chieuRong           Float
+  hinhAnhSanPham      String?     @db.LongText
+  hinhAnhGiayTo       String?     @db.LongText
+  video               String?     @db.LongText
+  tinhTrangPhapLy     String?
+  loaiHinhId          Int
+  soTang              Int?
+  huongBanCong        String?
+  soPhongNgu          Int?
+  soPhongTam          Int?
+  hinhAnhBanVeThietKe String?     @db.LongText
+  tinhTrangNoiThat    String?
+  danhSachTienNghi    String?     @db.LongText
+  hoanThanh           DateTime?
+  suaChuaLanCuoi      DateTime?
+  huongCuaChinh       String?
+  dienTichGarage      Float?
+  dienTichHoBoi       Float?
+  coNhaKho            Boolean?
+  huongDat            String?
+  createdAt           DateTime    @default(now())
+  updatedAt           DateTime?   @updatedAt
+  user                User        @relation(fields: [userId], references: [id])
+  loaiHinh            LoaiHinh    @relation(fields: [loaiHinhId], references: [id])
+  Favorites           Favourite[]
+
+  @@index([loaiHinhId])
+  @@index([userId])
+}
+
+model LoaiHinh {
+  id        Int       @id @default(autoincrement())
+  name      String    @unique
+  loaiBDSId Int
+  createdAt DateTime  @default(now())
+  visible   Boolean   @default(true)
+  loaiBDS   LoaiBDS   @relation(fields: [loaiBDSId], references: [id])
+  baiViets  BaiViet[]
+
+  @@index([loaiBDSId])
+}
+
+model DirectMessage {
+  id             String        @id @default(uuid())
+  content        String        @db.Text
+  fileUrl        String?       @db.Text
+  userId         Int
+  conversationId String
+  deleted        Boolean       @default(false)
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+  user           User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  seenBy         SeenMessage[]
+  conversation   Conversation  @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([conversationId])
+}
+
+model SeenMessage {
+  id              String        @id
+  userId          Int
+  directMessageId String
+  seenAt          DateTime?
+  user            User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  directMessage   DirectMessage @relation(fields: [directMessageId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, directMessageId])
+  @@index([directMessageId])
+}
+
+model Banners {
+  id          Int      @id @default(autoincrement())
+  bannerIndex Int      @unique
+  anhBanner   String?
+  createdAt   DateTime @default(now())
+}
+
+model Favourite {
+  id        Int       @id @default(autoincrement())
+  userId    Int       @unique
+  createdAt DateTime  @default(now())
+  user      User      @relation(fields: [userId], references: [id])
+  baiViets  BaiViet[]
+
+  @@index([userId])
+}
+
+model Notification {
+  id          Int      @id @default(autoincrement())
+  userId      Int
+  noiDung     String
+  anhThongBao String?  @default("https://i0.wp.com/www.repol.copl.ulaval.ca/wp-content/uploads/2019/01/default-user-icon.jpg?ssl=1")
+  daDoc       Boolean  @default(false)
+  createdAt   DateTime @default(now())
+
+  @@index([userId])
+}
+
+model Office {
+  id          Int     @id @default(autoincrement())
+  nameOffice  String
+  email       String  @unique
+  password    String
+  logo        String? @default("https://i0.wp.com/www.repol.copl.ulaval.ca/wp-content/uploads/2019/01/default-user-icon.jpg?ssl=1")
+  aboutUs     String
+  policy      String  @db.LongText
+  address     String
+  phoneNumber String
+  anhGiayPhep String?
+}
+
+model PaymentHistory {
+  id               Int      @id @default(autoincrement())
+  userId           Int
+  packId           Int
+  giaTriThanhToan  Float
+  noiDungThanhToan String
+  createdAt        DateTime @default(now())
+
+  @@index([packId])
+  @@index([userId])
+}
+
+model Revenue {
+  id          Int      @id @default(autoincrement())
+  amount      Float
+  createdAt   DateTime @default(now())
+  userId      Int
+  number      Int
+  serviceName String
+  user        User     @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+}
+
+model ServicePack {
+  id         Int     @id @default(autoincrement())
+  tenGoi     String
+  giaGoi     Float
+  chiTietGoi String? @db.LongText
+}
+
+model BaiVietToFavourite {
+  A Int
+  B Int
+
+  @@unique([A, B], map: "_BaiVietToFavourite_AB_unique")
+  @@index([B], map: "_BaiVietToFavourite_B_index")
+  @@map("_BaiVietToFavourite")
+}
+
+model Conversation {
+  id             String          @id @default(uuid())
+  userOneId      Int
+  userTwoId      Int
+  lastMessageAt  DateTime        @updatedAt
+  lastMessage    String?
+  userOne        User            @relation("userOne", fields: [userOneId], references: [id], onDelete: Cascade)
+  userTwo        User            @relation("userTwo", fields: [userTwoId], references: [id], onDelete: Cascade)
+  directMessages DirectMessage[]
+
+  @@unique([userOneId, userTwoId])
+  @@index([userTwoId])
+}
